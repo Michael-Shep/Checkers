@@ -1,9 +1,10 @@
 import './App.css';
+import Board from './Board';
 
-function App() {
+const App = () => {
   return (
-    <div>
-      <p>Hello World</p>
+    <div id="container">
+      <Board />
     </div>
   );
 }
