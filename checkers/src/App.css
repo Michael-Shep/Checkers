@@ -49,3 +49,9 @@
   height: 30px;
   border-radius: 50%;
 }
+
+.selectedSquare {
+  border: 3px solid greenyellow;
+  width: 44px;
+  height: 44px;
+}
