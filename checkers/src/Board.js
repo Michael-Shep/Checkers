@@ -7,11 +7,16 @@ const Board = () => {
 
     const createStartingGrid = () => {
         let grid = [];
-        //Start grid as empty
+        //Create starting configuration for the checkers - 1 represnts black, 2 represents white
         for (let y = 0; y < numSquaresInLine; y++) {
             let gridRow = [];
             for (let x = 0; x < numSquaresInLine; x++) {
-                gridRow.push('0');
+                if (((y === 0 || y === 2) && x % 2 === 1) || (y === 1 && x % 2 === 0))
+                    gridRow.push('1')
+                else if (((y === 5 || y === 7) && x % 2 === 0) || (y === 6 && x % 2 === 1))
+                    gridRow.push('2')
+                else
+                    gridRow.push('0');
             }
             grid.push(gridRow);
         }
@@ -26,9 +31,9 @@ const Board = () => {
                 grid.map((row, rowIndex) => {
                     return (<div className="boardRow" key={`row${rowIndex}`}> 
                         {
-                            row.map((_, columnIndex) => 
+                            row.map((value, columnIndex) => 
                                 <GridSquare key={(rowIndex * numSquaresInLine) + columnIndex} 
-                                            row={rowIndex} col={columnIndex}/>)
+                                            row={rowIndex} col={columnIndex} value={value} />)
                         }
                     </div>);
                 })
