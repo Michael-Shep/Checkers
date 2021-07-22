@@ -35,14 +35,57 @@ const Board = () => {
      * Moves a checker from the selected position into the newly selected position
      * @param {*} newRow The row the checker should be moved to
      * @param {*} newCol The column the checker should be moved to
+     * @param {*} takingMove Whether the performed move is one which takes one of the opponents pieces
+     * @param {*} takenRow The row of the piece that should be taken 
+     * @param {*} takenCol The col of the piece that should be taken
      */
-    const performMove = (newRow, newCol) => {
+    const performMove = (newRow, newCol, takingMove = false, takenRow = -1, takenCol = -1) => {
         let gridCopy = copy(grid);
         gridCopy[newRow][newCol] = grid[selectedPosition[0]][selectedPosition[1]];
         gridCopy[selectedPosition[0]][selectedPosition[1]] = '0';
+        if (takingMove && takenRow !== -1 && takenCol !== -1) {
+            gridCopy[takenRow][takenCol] = '0';
+        };
         setGrid(gridCopy);
         setSelectedPosition([]);
-    }
+    };
+
+    /**
+     * Handles all the movement code for the checkers - MAY BE ABLE TO BE IMPROVED AS NOT TOO CLEAN CURRENTLY
+     * @param {*} rowIndex The row of where the selected checker should be moved to
+     * @param {*} columnIndex The col of where the selected checker should be moved to
+     */
+    const handleMovement = (rowIndex, columnIndex) => {
+        //Handle standard movement - moving up or down 1 space diagonally
+        if ((grid[selectedPosition[0]][selectedPosition[1]] === '1' && rowIndex === selectedPosition[0] + 1) || 
+            (grid[selectedPosition[0]][selectedPosition[1]] === '2' && rowIndex === selectedPosition[0] - 1)) {
+                if (columnIndex === selectedPosition[1] - 1 || columnIndex === selectedPosition[1] + 1) {
+                    performMove(rowIndex, columnIndex);
+                }
+        }
+        //Handle taking a piece to the bottom of the current selected checker
+        else if((grid[selectedPosition[0]][selectedPosition[1]] === '1' && rowIndex === selectedPosition[0] + 2)) {
+            //Bottom right
+            if (columnIndex === selectedPosition[1] + 2 && grid[selectedPosition[0] + 1][selectedPosition[1] + 1] === '2') {
+                performMove(rowIndex, columnIndex, true, selectedPosition[0] + 1, selectedPosition[1] + 1);
+            } 
+            //Bottom Left
+            if (columnIndex === selectedPosition[1] - 2 && grid[selectedPosition[0] + 1][selectedPosition[1] - 1] === '2') {
+                performMove(rowIndex, columnIndex, true, selectedPosition[0] + 1, selectedPosition[1] - 1);
+            }
+        }
+        //Handle taking a piece to the top of the current selected checker
+        else if((grid[selectedPosition[0]][selectedPosition[1]] === '2' && rowIndex === selectedPosition[0] - 2)) {
+            //Top right
+            if (columnIndex === selectedPosition[1] + 2 && grid[selectedPosition[0] - 1][selectedPosition[1] + 1] === '1') {
+                performMove(rowIndex, columnIndex, true, selectedPosition[0] - 1, selectedPosition[1] + 1);
+            } 
+            //Top Left
+            if (columnIndex === selectedPosition[1] - 2 && grid[selectedPosition[0] - 1][selectedPosition[1] - 1] === '1') {
+                performMove(rowIndex, columnIndex, true, selectedPosition[0] - 1, selectedPosition[1] - 1);
+            }
+        }
+    };
 
     /**
      * Handles the click event for one of the grid positions
@@ -56,13 +99,7 @@ const Board = () => {
         }
         //If we already have a checker selected and then select an empty space, see if we can move to that space
         else if (value === '0' && selectedPosition.length === 2) {
-            //Handle standard movement - moving up or down 1 space diagonally
-            if ((grid[selectedPosition[0]][selectedPosition[1]] === '1' && rowIndex === selectedPosition[0] + 1) || 
-                (grid[selectedPosition[0]][selectedPosition[1]] === '2' && rowIndex === selectedPosition[0] - 1)) {
-                    if (columnIndex === selectedPosition[1] - 1 || columnIndex === selectedPosition[1] + 1) {
-                        performMove(rowIndex, columnIndex);
-                    }
-            }
+            handleMovement(rowIndex, columnIndex);
         }
     };
 
