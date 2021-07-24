@@ -44,6 +44,14 @@
   background-color: #EACE09;
 }
 
+#turnText {
+  width: 400px;
+  text-align: center;
+  margin-bottom: 20px;
+  font-weight: bold;
+  font-size: 24px;
+}
+
 .checker {
   width: 30px;
   height: 30px;

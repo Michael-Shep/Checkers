@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { copy } from 'fastest-json-copy';
 
 import GridSquare from "./GridSquare";
@@ -30,6 +30,38 @@ const Board = () => {
 
     const [grid, setGrid] = useState(createStartingGrid());
     const [selectedPosition, setSelectedPosition] = useState([]);
+    const [player1Turn, setPlayer1Turn] = useState(true);
+    const [winner, setWinner] = useState(-1);
+
+    /**
+     * Checks whether the game has been won by either player - STILL NEED TO HANDLE CONDITION FOR IF PLAYER CAN'T MOVE
+     */
+    const checkWinCondition = () => {
+        let blackPiecesRemaining = false;
+        let yellowPiecesRemaining = false;
+
+        for (let y = 0; y < numSquaresInLine; y++) {
+            //If we are on a even row, the checkers start at position 1, otherwise position 0
+            let startingPosition = (y % 2) === 0 ? 1 : 0;
+            for (let x = startingPosition; x < numSquaresInLine; x += 2) {
+                if (grid[y][x] === '1') {
+                    blackPiecesRemaining = true;
+                    if (yellowPiecesRemaining) return;
+                } else if (grid[y][x] === '2') {
+                    yellowPiecesRemaining = true;
+                    if (blackPiecesRemaining) return;
+                }
+            }
+        }
+
+        if (!blackPiecesRemaining) {
+            setWinner(2);
+        } else if (!yellowPiecesRemaining) {
+            setWinner(1);
+        }
+    };
+
+    useEffect(checkWinCondition, [grid]);
 
     /**
      * Moves a checker from the selected position into the newly selected position
@@ -48,6 +80,7 @@ const Board = () => {
         };
         setGrid(gridCopy);
         setSelectedPosition([]);
+        setPlayer1Turn(!player1Turn);
     };
 
     /**
@@ -94,7 +127,7 @@ const Board = () => {
      * @param {*} columnIndex The column of the square that was pressed
      */
     const onClickHandler = (value, rowIndex, columnIndex) => {
-        if (value !== '0') {
+        if (((value === '1' && player1Turn) || (value === '2' && !player1Turn)) && winner === -1) {
             setSelectedPosition([rowIndex, columnIndex]);
         }
         //If we already have a checker selected and then select an empty space, see if we can move to that space
@@ -114,21 +147,38 @@ const Board = () => {
                && selectedPosition[1] === colIndex;
     };
 
+    /**
+     * Gets the text that should be displayed for each player's turn - will also display the winner when there is one
+     * @returns A div containing the text that should be displayed
+     */
+    const getTurnText = () => {
+        let outputText = '';
+        if (winner !== -1) {
+            outputText = `Player ${winner} Wins`;
+        } else {
+            outputText = `Player ${player1Turn ? '1' : '2'}'s Turn ${player1Turn ? '(Black)' : '(Yellow)'}`
+        }
+        return <div id="turnText">{outputText}</div>;
+    };
+
     return (
-        <div id="board">
-            {
-                grid.map((row, rowIndex) => {
-                    return (<div className="boardRow" key={`row${rowIndex}`}> 
-                        {
-                            row.map((value, columnIndex) => 
-                                <GridSquare onClick={() => onClickHandler(value, rowIndex, columnIndex)} 
-                                            key={(rowIndex * numSquaresInLine) + columnIndex} 
-                                            row={rowIndex} col={columnIndex} value={value} 
-                                            selected={isSquareSelected(rowIndex, columnIndex)}/>)
-                        }
-                    </div>);
-                })
-            }
+        <div>
+            {getTurnText()}
+            <div id="board">
+                {
+                    grid.map((row, rowIndex) => {
+                        return (<div className="boardRow" key={`row${rowIndex}`}> 
+                            {
+                                row.map((value, columnIndex) => 
+                                    <GridSquare onClick={() => onClickHandler(value, rowIndex, columnIndex)} 
+                                                key={(rowIndex * numSquaresInLine) + columnIndex} 
+                                                row={rowIndex} col={columnIndex} value={value} 
+                                                selected={isSquareSelected(rowIndex, columnIndex)}/>)
+                            }
+                        </div>);
+                    })
+                }
+            </div>
         </div>
     );
 };
