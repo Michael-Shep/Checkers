@@ -8,11 +8,11 @@ const Board = () => {
 
     /**
      * Creates the starting grid used for checkers
-     * @returns Grid of values 0, 1 and 2 - 0 means no checker, 1 means black 2 means white
+     * @returns Grid of values 0, 1 and 2 - 0 means no checker, 1 means black 2 means yellow
+     * 3 means kinged black piece, 4 means kinged yellow
      */
     const createStartingGrid = () => {
         let grid = [];
-        //Create starting configuration for the checkers - 1 represnts black, 2 represents white
         for (let y = 0; y < numSquaresInLine; y++) {
             let gridRow = [];
             for (let x = 0; x < numSquaresInLine; x++) {
@@ -44,10 +44,10 @@ const Board = () => {
             //If we are on a even row, the checkers start at position 1, otherwise position 0
             let startingPosition = (y % 2) === 0 ? 1 : 0;
             for (let x = startingPosition; x < numSquaresInLine; x += 2) {
-                if (grid[y][x] === '1') {
+                if (grid[y][x] === '1' || grid[y][x] === '3') {
                     blackPiecesRemaining = true;
                     if (yellowPiecesRemaining) return;
-                } else if (grid[y][x] === '2') {
+                } else if (grid[y][x] === '2' || grid[y][x] === '4') {
                     yellowPiecesRemaining = true;
                     if (blackPiecesRemaining) return;
                 }
@@ -75,6 +75,16 @@ const Board = () => {
         let gridCopy = copy(grid);
         gridCopy[newRow][newCol] = grid[selectedPosition[0]][selectedPosition[1]];
         gridCopy[selectedPosition[0]][selectedPosition[1]] = '0';
+        //If the checker was not yet kinged and it has reached the top or bottom of the board, make it kinged
+        if (newRow === 0 || newRow === numSquaresInLine - 1) {
+            if (gridCopy[newRow][newCol] === '1') {
+                gridCopy[newRow][newCol] = '3';
+            } else if (gridCopy[newRow][newCol] === '2') {
+                gridCopy[newRow][newCol] = '4';
+            }
+        }
+
+        //Handle remove the enemy checker that has been taken from the board
         if (takingMove && takenRow !== -1 && takenCol !== -1) {
             gridCopy[takenRow][takenCol] = '0';
         };
