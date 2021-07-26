@@ -66,6 +66,56 @@ const Board = () => {
         setPlayer1Turn(!player1Turn);
     };
 
+    const isSelectedCheckerValue = (value) => {
+        return grid[selectedPosition[0]][selectedPosition[1]] === value;
+    };
+
+    /**
+     * Gets whether the selected checker is black - has value 1 or 3
+     */
+    const isBlackCheckerSelected = () => {
+        return isSelectedCheckerValue('1') || isSelectedCheckerValue('3');
+    };
+
+    /**
+     * Gets whether the selected checker is yellow - has value 2 or 4
+     */
+    const isYellowCheckerSelected = () => {
+        return isSelectedCheckerValue('2') || isSelectedCheckerValue('4');
+    };
+
+    /**
+     * Gets whether the selected checker is a king - has value 3 or 4
+     */
+    const isSelectedCheckerKing = () => {
+        return isSelectedCheckerValue('3') || isSelectedCheckerValue('4');
+    };
+
+    /**
+     * Checks whether a specific taking move can be performed and if so, performs it
+     * @param {*} columnOffset The column to be checked in relation to the current position of the checker
+     * @param {*} rowIndex The row of the checker
+     * @param {*} columnIndex The column of the checker
+     * @param {*} yEnemyOffset The row which we are checking for an enemy at
+     * @param {*} xEnemyOffset The column which we are checking for an enemy at
+     * @param {*} enemyColor Whether the enemy is BLACK or YELLOW
+     */
+    const checkAndPerformTakingMove = (columnOffset, rowIndex, columnIndex, yEnemyOffset, xEnemyOffset, enemyColor) => {
+        let enemyAtPosition = false;
+        if (enemyColor.toUpperCase() === 'BLACK') {
+            enemyAtPosition = grid[selectedPosition[0] + yEnemyOffset][selectedPosition[1] + xEnemyOffset] === '1' ||
+                              grid[selectedPosition[0] + yEnemyOffset][selectedPosition[1] + xEnemyOffset] === '3';
+        }
+        else if(enemyColor.toUpperCase() === 'YELLOW') {
+            enemyAtPosition = grid[selectedPosition[0] + yEnemyOffset][selectedPosition[1] + xEnemyOffset] === '2' ||
+                              grid[selectedPosition[0] + yEnemyOffset][selectedPosition[1] + xEnemyOffset] === '4';
+        }
+
+        if (enemyAtPosition && columnIndex === selectedPosition[1] + columnOffset) {
+            performMove(rowIndex, columnIndex, true, selectedPosition[0] + yEnemyOffset, selectedPosition[1] + xEnemyOffset);
+        }
+    };
+
     /**
      * Handles all the movement code for the checkers - MAY BE ABLE TO BE IMPROVED AS NOT TOO CLEAN CURRENTLY
      * @param {*} rowIndex The row of where the selected checker should be moved to
@@ -73,32 +123,32 @@ const Board = () => {
      */
     const handleMovement = (rowIndex, columnIndex) => {
         //Handle standard movement - moving up or down 1 space diagonally
-        if ((grid[selectedPosition[0]][selectedPosition[1]] === '1' && rowIndex === selectedPosition[0] + 1) || 
-            (grid[selectedPosition[0]][selectedPosition[1]] === '2' && rowIndex === selectedPosition[0] - 1)) {
-                if (columnIndex === selectedPosition[1] - 1 || columnIndex === selectedPosition[1] + 1) {
-                    performMove(rowIndex, columnIndex);
-                }
-        }
-        //Handle taking a piece to the bottom of the current selected checker
-        else if((grid[selectedPosition[0]][selectedPosition[1]] === '1' && rowIndex === selectedPosition[0] + 2)) {
-            //Bottom right
-            if (columnIndex === selectedPosition[1] + 2 && grid[selectedPosition[0] + 1][selectedPosition[1] + 1] === '2') {
-                performMove(rowIndex, columnIndex, true, selectedPosition[0] + 1, selectedPosition[1] + 1);
-            } 
-            //Bottom Left
-            if (columnIndex === selectedPosition[1] - 2 && grid[selectedPosition[0] + 1][selectedPosition[1] - 1] === '2') {
-                performMove(rowIndex, columnIndex, true, selectedPosition[0] + 1, selectedPosition[1] - 1);
+        if (((isBlackCheckerSelected() || isSelectedCheckerKing()) && rowIndex === selectedPosition[0] + 1) || 
+            ((isYellowCheckerSelected() || isSelectedCheckerKing()) && rowIndex === selectedPosition[0] - 1)) {
+            if (columnIndex === selectedPosition[1] - 1 || columnIndex === selectedPosition[1] + 1) {
+                performMove(rowIndex, columnIndex);
+            }
+       }
+        //Handle standard black piece movement for taking a checker
+        else if (isBlackCheckerSelected()) {
+            if (rowIndex === selectedPosition[0] + 2) {
+                checkAndPerformTakingMove(2, rowIndex, columnIndex, 1, 1, 'YELLOW');
+                checkAndPerformTakingMove(-2, rowIndex, columnIndex, 1, -1, 'YELLOW');
+            }
+            else if(isSelectedCheckerKing() && rowIndex === selectedPosition[0] - 2) {
+                checkAndPerformTakingMove(2, rowIndex, columnIndex, -1, 1, 'YELLOW');
+                checkAndPerformTakingMove(-2, rowIndex, columnIndex, -1, -1, 'YELLOW');
             }
         }
-        //Handle taking a piece to the top of the current selected checker
-        else if((grid[selectedPosition[0]][selectedPosition[1]] === '2' && rowIndex === selectedPosition[0] - 2)) {
-            //Top right
-            if (columnIndex === selectedPosition[1] + 2 && grid[selectedPosition[0] - 1][selectedPosition[1] + 1] === '1') {
-                performMove(rowIndex, columnIndex, true, selectedPosition[0] - 1, selectedPosition[1] + 1);
-            } 
-            //Top Left
-            if (columnIndex === selectedPosition[1] - 2 && grid[selectedPosition[0] - 1][selectedPosition[1] - 1] === '1') {
-                performMove(rowIndex, columnIndex, true, selectedPosition[0] - 1, selectedPosition[1] - 1);
+        //Handle standard yellow piece movement for taking a checker
+        else if(isYellowCheckerSelected()) {
+            if (rowIndex === selectedPosition[0] - 2) {
+                checkAndPerformTakingMove(2, rowIndex, columnIndex, -1, 1, 'BLACK');
+                checkAndPerformTakingMove(-2, rowIndex, columnIndex, -1, -1, 'BLACK');
+            }
+            else if(isSelectedCheckerKing() && rowIndex === selectedPosition[0] + 2) {
+                checkAndPerformTakingMove(2, rowIndex, columnIndex, 1, 1, 'BLACK');
+                checkAndPerformTakingMove(-2, rowIndex, columnIndex, 1, -1, 'BLACK');
             }
         }
     };
@@ -110,7 +160,8 @@ const Board = () => {
      * @param {*} columnIndex The column of the square that was pressed
      */
     const onClickHandler = (value, rowIndex, columnIndex) => {
-        if (((value === '1' && player1Turn) || (value === '2' && !player1Turn)) && winner === -1) {
+        if ((((value === '1' || value === '3') && player1Turn) || 
+             ((value === '2' || value === '4') && !player1Turn)) && winner === -1) {
             setSelectedPosition([rowIndex, columnIndex]);
         }
         //If we already have a checker selected and then select an empty space, see if we can move to that space
